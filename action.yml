@@ -1,0 +1,176 @@
+name: 'Myco PR Reviewer'
+description: 'AI code-review / QA agent — reviews a pull request, posts findings as PR comments, and optionally files tickets and reports metrics.'
+author: 'Myco'
+
+inputs:
+  pr_link:
+    description: 'Full URL of the pull request (or compare link, e.g. .../compare/main...feature) to review.'
+    required: true
+
+  # ── LLM provider (BYO key) ──────────────────────────────────────────────
+  litellm_api_key:
+    description: 'API key for the LLM provider. Any OpenAI-compatible provider works (OpenAI itself, LiteLLM proxy, Together, Groq, etc).'
+    required: true
+  litellm_base_url:
+    description: 'Base URL for the LLM provider''s OpenAI-compatible API. Defaults to OpenAI''s own endpoint.'
+    required: false
+    default: 'https://api.openai.com/v1'
+  litellm_model:
+    description: 'Model name to request from the provider.'
+    required: false
+    default: 'gpt-4.1'
+  validator_model:
+    description: 'Optional separate (usually cheaper/faster) model for the second-pass finding validator. Defaults to litellm_model.'
+    required: false
+
+  # ── Target repo / PR context ────────────────────────────────────────────
+  github_token:
+    description: 'Token used to read the target repo and post PR comments / create Issues. Defaults to the workflow''s automatic GITHUB_TOKEN, which is sufficient for same-repo runs.'
+    required: false
+    default: ${{ github.token }}
+  target_repo:
+    description: 'Override for which repo to clone for full-code context. Defaults to the repo the PR belongs to.'
+    required: false
+  target_branch:
+    description: 'Override for which branch to clone. Defaults to the PR''s head branch.'
+    required: false
+  target_repo_path:
+    description: 'Local path to clone the target repo into.'
+    required: false
+    default: './target-repo'
+  output_dir:
+    description: 'Local directory to write review output/artifacts into.'
+    required: false
+    default: './reviews'
+
+  # ── Review behavior ──────────────────────────────────────────────────────
+  min_severity:
+    description: 'Minimum severity to report (P1/P2/P3).'
+    required: false
+    default: 'P3'
+  post_github_comments:
+    description: 'Whether to post findings as PR review comments.'
+    required: false
+    default: 'true'
+  validate_findings:
+    description: 'Whether to run the second-pass validator (CONFIRMED / FALSE_POSITIVE / UNCERTAIN) before posting/gating/ticketing.'
+    required: false
+    default: 'true'
+  ci_gate:
+    description: 'Whether to fail this job (non-zero exit) when a merge-blocking confirmed finding is present.'
+    required: false
+    default: 'true'
+  gate_min_severity:
+    description: 'Minimum severity that counts as merge-blocking for the CI gate.'
+    required: false
+    default: 'P1'
+
+  # ── Test-coverage scan paths (optional) ──────────────────────────────────
+  ut_path:
+    description: 'Comma-separated unit test path(s)/glob(s) for coverage scanning.'
+    required: false
+  it_path:
+    description: 'Comma-separated integration test path(s)/glob(s).'
+    required: false
+  component_test_path:
+    description: 'Comma-separated component test path(s)/glob(s).'
+    required: false
+  contract_test_path:
+    description: 'Comma-separated contract test path(s)/glob(s).'
+    required: false
+
+  # ── Ticket creation (optional) ────────────────────────────────────────────
+  create_tickets:
+    description: 'Whether to file a ticket for confirmed findings. Auto-enabled if Jira vars are set or ticket_provider is github-issues.'
+    required: false
+  create_tickets_for:
+    description: '"merge-blocking" (default) or "all-confirmed" — which confirmed findings get tickets.'
+    required: false
+    default: 'merge-blocking'
+  ticket_provider:
+    description: '"jira", "github-issues", or "dry-run".'
+    required: false
+  github_issue_labels:
+    description: 'Comma-separated extra labels to add to created GitHub Issues.'
+    required: false
+  ticket_github_repo:
+    description: 'Override for which "owner/repo" GitHub Issues get filed into. Defaults to the repo the PR belongs to.'
+    required: false
+  jira_base_url:
+    description: 'Jira base URL, e.g. https://yourteam.atlassian.net.'
+    required: false
+  jira_email:
+    description: 'Jira account email used for API auth.'
+    required: false
+  jira_token:
+    description: 'Jira API token.'
+    required: false
+  jira_project:
+    description: 'Jira project key to file tickets under.'
+    required: false
+  jira_issue_type:
+    description: 'Jira issue type name (e.g. "Bug").'
+    required: false
+  jira_labels:
+    description: 'Comma-separated labels to add to created Jira issues.'
+    required: false
+  jira_assignee_account_id:
+    description: 'Jira accountId to assign created issues to.'
+    required: false
+
+  # ── Cross-client metrics reporting (optional, off by default) ────────────
+  metrics_endpoint:
+    description: 'If set, POSTs a privacy-minimized summary (counts + finding titles/severity/verdict — never file paths, root cause, fix text, or code) to this URL after each run.'
+    required: false
+  metrics_api_key:
+    description: 'Bearer token sent with the metrics POST.'
+    required: false
+  client_id:
+    description: 'Identifier for this client in the metrics store. Defaults to "owner/repo".'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Myco PR Reviewer
+      shell: bash
+      run: node "${{ github.action_path }}/dist/index.js"
+      env:
+        PR_LINK: ${{ inputs.pr_link }}
+        LITELLM_API_KEY: ${{ inputs.litellm_api_key }}
+        LITELLM_BASE_URL: ${{ inputs.litellm_base_url }}
+        LITELLM_MODEL: ${{ inputs.litellm_model }}
+        VALIDATOR_MODEL: ${{ inputs.validator_model }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        TARGET_REPO: ${{ inputs.target_repo }}
+        TARGET_BRANCH: ${{ inputs.target_branch }}
+        TARGET_REPO_PATH: ${{ inputs.target_repo_path }}
+        OUTPUT_DIR: ${{ inputs.output_dir }}
+        MIN_SEVERITY: ${{ inputs.min_severity }}
+        POST_GITHUB_COMMENTS: ${{ inputs.post_github_comments }}
+        VALIDATE_FINDINGS: ${{ inputs.validate_findings }}
+        CI_GATE: ${{ inputs.ci_gate }}
+        GATE_MIN_SEVERITY: ${{ inputs.gate_min_severity }}
+        UT_PATH: ${{ inputs.ut_path }}
+        IT_PATH: ${{ inputs.it_path }}
+        COMPONENT_TEST_PATH: ${{ inputs.component_test_path }}
+        CONTRACT_TEST_PATH: ${{ inputs.contract_test_path }}
+        CREATE_TICKETS: ${{ inputs.create_tickets }}
+        CREATE_TICKETS_FOR: ${{ inputs.create_tickets_for }}
+        TICKET_PROVIDER: ${{ inputs.ticket_provider }}
+        GITHUB_ISSUE_LABELS: ${{ inputs.github_issue_labels }}
+        TICKET_GITHUB_REPO: ${{ inputs.ticket_github_repo }}
+        JIRA_BASE_URL: ${{ inputs.jira_base_url }}
+        JIRA_EMAIL: ${{ inputs.jira_email }}
+        JIRA_TOKEN: ${{ inputs.jira_token }}
+        JIRA_PROJECT: ${{ inputs.jira_project }}
+        JIRA_ISSUE_TYPE: ${{ inputs.jira_issue_type }}
+        JIRA_LABELS: ${{ inputs.jira_labels }}
+        JIRA_ASSIGNEE_ACCOUNT_ID: ${{ inputs.jira_assignee_account_id }}
+        METRICS_ENDPOINT: ${{ inputs.metrics_endpoint }}
+        METRICS_API_KEY: ${{ inputs.metrics_api_key }}
+        CLIENT_ID: ${{ inputs.client_id }}
+
+branding:
+  icon: 'eye'
+  color: 'blue'
