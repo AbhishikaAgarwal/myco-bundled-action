@@ -8,19 +8,32 @@ inputs:
     required: true
 
   # ── LLM provider (BYO key) ──────────────────────────────────────────────
+  llm_provider:
+    description: '"openai" (default — any OpenAI-compatible endpoint: OpenAI itself, a LiteLLM proxy, Together, Groq, Gemini''s own OpenAI-compatible endpoint, etc) or "anthropic" (native Anthropic Messages API, for a raw Anthropic key).'
+    required: false
+    default: 'openai'
   litellm_api_key:
-    description: 'API key for the LLM provider. Any OpenAI-compatible provider works (OpenAI itself, LiteLLM proxy, Together, Groq, etc).'
-    required: true
+    description: 'API key for the LLM provider. Required when llm_provider is "openai" (the default).'
+    required: false
   litellm_base_url:
-    description: 'Base URL for the LLM provider''s OpenAI-compatible API. Defaults to OpenAI''s own endpoint.'
+    description: 'Base URL for the LLM provider''s OpenAI-compatible API. Defaults to OpenAI''s own endpoint. Only used when llm_provider is "openai".'
     required: false
     default: 'https://api.openai.com/v1'
   litellm_model:
-    description: 'Model name to request from the provider.'
+    description: 'Model name to request from the provider. Only used when llm_provider is "openai".'
     required: false
     default: 'gpt-4.1'
+  anthropic_api_key:
+    description: 'Anthropic API key. Required when llm_provider is "anthropic".'
+    required: false
+  anthropic_model:
+    description: 'Anthropic model name. Only used when llm_provider is "anthropic".'
+    required: false
+  anthropic_base_url:
+    description: 'Optional override for an enterprise/custom endpoint (e.g. a Bedrock or Vertex proxy speaking the Anthropic API shape). Only used when llm_provider is "anthropic".'
+    required: false
   validator_model:
-    description: 'Optional separate (usually cheaper/faster) model for the second-pass finding validator. Defaults to litellm_model.'
+    description: 'Optional separate (usually cheaper/faster) model for the second-pass finding validator, for whichever provider is configured. Defaults to the main model.'
     required: false
 
   # ── Target repo / PR context ────────────────────────────────────────────
@@ -137,9 +150,13 @@ runs:
       run: node "${{ github.action_path }}/dist/index.js"
       env:
         PR_LINK: ${{ inputs.pr_link }}
+        LLM_PROVIDER: ${{ inputs.llm_provider }}
         LITELLM_API_KEY: ${{ inputs.litellm_api_key }}
         LITELLM_BASE_URL: ${{ inputs.litellm_base_url }}
         LITELLM_MODEL: ${{ inputs.litellm_model }}
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
+        ANTHROPIC_MODEL: ${{ inputs.anthropic_model }}
+        ANTHROPIC_BASE_URL: ${{ inputs.anthropic_base_url }}
         VALIDATOR_MODEL: ${{ inputs.validator_model }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         TARGET_REPO: ${{ inputs.target_repo }}

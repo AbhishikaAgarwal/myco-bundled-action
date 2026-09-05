@@ -41,6 +41,19 @@ jobs:
           # litellm_model defaults to gpt-4.1.
 ```
 
+Bringing a raw Anthropic key instead of an OpenAI-compatible one? Set `llm_provider: anthropic`:
+
+```yaml
+      - uses: AbhishikaAgarwal/myco-bundled-action@v1
+        with:
+          pr_link: ${{ github.event.pull_request.html_url }}
+          llm_provider: anthropic
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # anthropic_model is optional — falls back to a sensible default.
+```
+
+(A raw Gemini key doesn't need this — Gemini has its own OpenAI-compatible endpoint, so it already works through the default `llm_provider: openai` path via `litellm_base_url`.)
+
 `github_token` defaults to the workflow's automatic `secrets.GITHUB_TOKEN`, which is enough
 for reviewing PRs in the same repo the workflow runs in (posting comments, and — if
 `ticket_provider: github-issues` — filing issues there too). No GitHub App or extra token is
@@ -53,10 +66,13 @@ See [`action.yml`](./action.yml) for the full, current list with defaults — th
 | Input | Required | Default | Notes |
 |---|---|---|---|
 | `pr_link` | yes | — | Full PR (or compare) URL to review |
-| `litellm_api_key` | yes | — | Your LLM provider's API key |
+| `llm_provider` | no | `openai` | `openai` (any OpenAI-compatible endpoint) or `anthropic` (native Anthropic key) |
+| `litellm_api_key` | if `llm_provider: openai` | — | Your LLM provider's API key |
 | `litellm_base_url` | no | `https://api.openai.com/v1` | Any OpenAI-compatible endpoint |
 | `litellm_model` | no | `gpt-4.1` | |
-| `validator_model` | no | same as `litellm_model` | Optional cheaper/faster model for the validator pass |
+| `anthropic_api_key` | if `llm_provider: anthropic` | — | Native Anthropic API key |
+| `anthropic_model` | no | — | Only used with `llm_provider: anthropic` |
+| `validator_model` | no | same as the main model | Optional cheaper/faster model for the validator pass |
 | `github_token` | no | `${{ github.token }}` | Only override for cross-repo scenarios |
 | `min_severity` | no | `P3` | Lowest severity reported |
 | `post_github_comments` | no | `true` | |
