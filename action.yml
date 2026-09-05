@@ -103,6 +103,9 @@ inputs:
   ticket_provider:
     description: '"jira", "github-issues", or "dry-run".'
     required: false
+  product_label:
+    description: 'Base label used on created tickets (Jira and GitHub Issues) — e.g. "<product_label>-confirmed-bug" on GitHub Issues, and as a Jira label. Defaults to a neutral "ai-code-review" rather than any product-specific name.'
+    required: false
   github_issue_labels:
     description: 'Comma-separated extra labels to add to created GitHub Issues.'
     required: false
@@ -175,6 +178,7 @@ runs:
         CREATE_TICKETS: ${{ inputs.create_tickets }}
         CREATE_TICKETS_FOR: ${{ inputs.create_tickets_for }}
         TICKET_PROVIDER: ${{ inputs.ticket_provider }}
+        PRODUCT_LABEL: ${{ inputs.product_label }}
         GITHUB_ISSUE_LABELS: ${{ inputs.github_issue_labels }}
         TICKET_GITHUB_REPO: ${{ inputs.ticket_github_repo }}
         JIRA_BASE_URL: ${{ inputs.jira_base_url }}

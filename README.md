@@ -81,6 +81,7 @@ See [`action.yml`](./action.yml) for the full, current list with defaults — th
 | `gate_min_severity` | no | `P1` | Severity threshold for the gate |
 | `ticket_provider` | no | — | `jira`, `github-issues`, or `dry-run` |
 | `create_tickets_for` | no | `merge-blocking` | or `all-confirmed` |
+| `product_label` | no | `ai-code-review` | Base label on created tickets — deliberately neutral, not a product-specific name |
 | `metrics_endpoint` / `metrics_api_key` / `client_id` | no | — | Opt-in cross-client metrics reporting (counts + finding titles only — never file paths, root cause, fix text, or code) |
 
 Jira-specific inputs (`jira_base_url`, `jira_email`, `jira_token`, `jira_project`,
