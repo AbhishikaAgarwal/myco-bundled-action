@@ -13,7 +13,7 @@ inputs:
     required: false
     default: 'openai'
   api_key:
-    description: 'API key for whichever llm_provider is configured — the recommended single input. Set llm_provider via a repo/org Variable (e.g. llm_provider: ${{ vars.LLM_PROVIDER }}) and this stays the same input either way, so switching providers never requires also swapping which input the key goes under. litellm_api_key / anthropic_api_key below still work and take precedence if set explicitly, for backward compatibility.'
+    description: 'API key for whichever llm_provider is configured — the recommended single input. Set llm_provider from a repo/org Variable named LLM_PROVIDER and this stays the same input either way, so switching providers never requires also swapping which input the key goes under. litellm_api_key / anthropic_api_key below still work and take precedence if set explicitly, for backward compatibility.'
     required: false
   litellm_api_key:
     description: '(Legacy — prefer api_key) API key for the LLM provider. Required when llm_provider is "openai" (the default) and api_key is not set.'
