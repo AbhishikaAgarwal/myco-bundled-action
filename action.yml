@@ -11,7 +11,7 @@ inputs:
   llm_provider:
     description: '"openai" (default — any OpenAI-compatible endpoint: OpenAI itself, a LiteLLM proxy, Together, Groq, Gemini''s own OpenAI-compatible endpoint, etc) or "anthropic" (native Anthropic Messages API, for a raw Anthropic key).'
     required: false
-    default: ${{ vars.LLM_PROVIDER || 'openai' }}
+    default: 'openai'
   api_key:
     description: 'API key for whichever llm_provider is configured — the recommended single input. Set llm_provider from a repo/org Variable named LLM_PROVIDER and this stays the same input either way, so switching providers never requires also swapping which input the key goes under. litellm_api_key / anthropic_api_key below still work and take precedence if set explicitly, for backward compatibility.'
     required: false
@@ -160,7 +160,7 @@ runs:
       run: node "${{ github.action_path }}/dist/index.js"
       env:
         PR_LINK: ${{ inputs.pr_link }}
-        LLM_PROVIDER: ${{ inputs.llm_provider || vars.LLM_PROVIDER || 'openai' }}
+        LLM_PROVIDER: ${{ inputs.llm_provider || 'openai' }}
         API_KEY: ${{ inputs.api_key }}
         LITELLM_API_KEY: ${{ inputs.litellm_api_key }}
         LITELLM_BASE_URL: ${{ inputs.litellm_base_url }}
