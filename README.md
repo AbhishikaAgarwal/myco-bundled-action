@@ -35,26 +35,30 @@ jobs:
       - uses: AbhishikaAgarwal/myco-bundled-action@v1
         with:
           pr_link: ${{ github.event.pull_request.html_url }}
-          litellm_api_key: ${{ secrets.LLM_API_KEY }}
-          # litellm_base_url defaults to https://api.openai.com/v1 — override if you're
-          # using a different OpenAI-compatible provider or a LiteLLM proxy.
-          # litellm_model defaults to gpt-4.1.
+          llm_provider: ${{ vars.LLM_PROVIDER }}   # "openai" (default) or "anthropic" — set once as a repo/org Variable
+          api_key: ${{ secrets.LLM_API_KEY }}
+          # litellm_base_url defaults to https://api.openai.com/v1 (only used when llm_provider is "openai") —
+          # override if you're using a different OpenAI-compatible provider or a LiteLLM proxy.
+          # litellm_model defaults to gpt-4.1 (only used when llm_provider is "openai").
 ```
 
-Bringing a raw Anthropic key instead of an OpenAI-compatible one? Set `llm_provider: anthropic`:
+**Why `vars.LLM_PROVIDER` instead of writing `llm_provider: anthropic` inline**: `api_key` is the same
+input regardless of provider, so switching providers is a one-line change in **Settings → Secrets and
+variables → Actions → Variables** — no workflow YAML edit at all, and no way to flip the provider without
+also updating which input the key goes under (that exact mismatch — provider changed, key left under the
+old provider-specific input — is what caused a confusing wrong-endpoint 401 in early testing). Leave
+`LLM_PROVIDER` unset and it defaults to `"openai"`.
 
-```yaml
-      - uses: AbhishikaAgarwal/myco-bundled-action@v1
-        with:
-          pr_link: ${{ github.event.pull_request.html_url }}
-          llm_provider: anthropic
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          # anthropic_model is optional — falls back to a sensible default.
-```
+(A raw Gemini key doesn't need `llm_provider: anthropic` — Gemini has its own OpenAI-compatible endpoint, so
+it already works through the default `openai` path via `litellm_base_url`.)
 
-(A raw Gemini key doesn't need this — Gemini has its own OpenAI-compatible endpoint, so it already works through the default `llm_provider: openai` path via `litellm_base_url`.)
+**Mismatched key and provider fails fast with a clear message.** An Anthropic key (`sk-ant-...`) under
+`llm_provider: openai` (or an OpenAI-style key under `llm_provider: anthropic`) is rejected before any
+network call, naming the exact fix, instead of surfacing as a generic 401 from the wrong provider's API.
 
-**Mismatched key and provider fails fast with a clear message.** An Anthropic key (`sk-ant-...`) passed as `litellm_api_key` with `llm_provider` left at its default (`openai`) — or an OpenAI-style key passed as `anthropic_api_key` — is rejected before any network call, naming the exact input to fix, instead of surfacing as a generic 401 from the wrong provider's API.
+**Legacy inputs, still supported**: `litellm_api_key` and `anthropic_api_key` still work exactly as
+before and take precedence over `api_key` if you set them explicitly — nothing breaks if you're already
+using them. `api_key` is just the simpler path for anyone setting up fresh, or switching providers later.
 
 `github_token` defaults to the workflow's automatic `secrets.GITHUB_TOKEN`, which is enough
 for reviewing PRs in the same repo the workflow runs in (posting comments, and — if
@@ -95,11 +99,12 @@ See [`action.yml`](./action.yml) for the full, current list with defaults — th
 | Input | Required | Default | Notes |
 |---|---|---|---|
 | `pr_link` | yes | — | Full PR (or compare) URL to review |
-| `llm_provider` | no | `openai` | `openai` (any OpenAI-compatible endpoint) or `anthropic` (native Anthropic key) |
-| `litellm_api_key` | if `llm_provider: openai` | — | Your LLM provider's API key |
+| `llm_provider` | no | `openai` | `openai` (any OpenAI-compatible endpoint) or `anthropic` (native Anthropic key) — recommend sourcing from a repo/org Variable: `${{ vars.LLM_PROVIDER }}` |
+| `api_key` | recommended | — | API key for whichever `llm_provider` is set — one input regardless of provider |
+| `litellm_api_key` | legacy, if `llm_provider: openai` and `api_key` unset | — | Your LLM provider's API key (prefer `api_key`) |
 | `litellm_base_url` | no | `https://api.openai.com/v1` | Any OpenAI-compatible endpoint |
 | `litellm_model` | no | `gpt-4.1` | |
-| `anthropic_api_key` | if `llm_provider: anthropic` | — | Native Anthropic API key |
+| `anthropic_api_key` | legacy, if `llm_provider: anthropic` and `api_key` unset | — | Native Anthropic API key (prefer `api_key`) |
 | `anthropic_model` | no | — | Only used with `llm_provider: anthropic` |
 | `validator_model` | no | same as the main model | Optional cheaper/faster model for the validator pass |
 | `github_token` | no | `${{ github.token }}` | Only override for cross-repo scenarios |

@@ -12,8 +12,11 @@ inputs:
     description: '"openai" (default — any OpenAI-compatible endpoint: OpenAI itself, a LiteLLM proxy, Together, Groq, Gemini''s own OpenAI-compatible endpoint, etc) or "anthropic" (native Anthropic Messages API, for a raw Anthropic key).'
     required: false
     default: 'openai'
+  api_key:
+    description: 'API key for whichever llm_provider is configured — the recommended single input. Set llm_provider via a repo/org Variable (e.g. llm_provider: ${{ vars.LLM_PROVIDER }}) and this stays the same input either way, so switching providers never requires also swapping which input the key goes under. litellm_api_key / anthropic_api_key below still work and take precedence if set explicitly, for backward compatibility.'
+    required: false
   litellm_api_key:
-    description: 'API key for the LLM provider. Required when llm_provider is "openai" (the default).'
+    description: '(Legacy — prefer api_key) API key for the LLM provider. Required when llm_provider is "openai" (the default) and api_key is not set.'
     required: false
   litellm_base_url:
     description: 'Base URL for the LLM provider''s OpenAI-compatible API. Defaults to OpenAI''s own endpoint. Only used when llm_provider is "openai".'
@@ -24,7 +27,7 @@ inputs:
     required: false
     default: 'gpt-4.1'
   anthropic_api_key:
-    description: 'Anthropic API key. Required when llm_provider is "anthropic".'
+    description: '(Legacy — prefer api_key) Anthropic API key. Required when llm_provider is "anthropic" and api_key is not set.'
     required: false
   anthropic_model:
     description: 'Anthropic model name. Only used when llm_provider is "anthropic".'
@@ -158,6 +161,7 @@ runs:
       env:
         PR_LINK: ${{ inputs.pr_link }}
         LLM_PROVIDER: ${{ inputs.llm_provider }}
+        API_KEY: ${{ inputs.api_key }}
         LITELLM_API_KEY: ${{ inputs.litellm_api_key }}
         LITELLM_BASE_URL: ${{ inputs.litellm_base_url }}
         LITELLM_MODEL: ${{ inputs.litellm_model }}
