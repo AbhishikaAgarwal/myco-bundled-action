@@ -133,5 +133,21 @@ plainly readable if someone opens the file), but it raises the bar past
 rebuild without a reason.
 
 Copy the resulting `dist/index.js` here, update `action.yml` if any input/env mapping
-changed, commit, and tag a new version (e.g. `v1`, moved forward, or `v1.1`) so pinned
-consumers pick it up deliberately.
+changed, then commit **and push**:
+
+```bash
+git add dist/index.js action.yml README.md
+git commit -m "..."
+git push origin main
+```
+
+**Then move the `v1` tag — this step is easy to forget and breaks every client's
+CI when it's skipped** (a `uses: .../myco-bundled-action@v1` reference resolves
+against an actual tag/branch named `v1`; if it doesn't exist at all, the error is
+`unable to find version 'v1'` — if it exists but wasn't moved, clients silently
+keep running the old bundle):
+
+```bash
+git tag -f v1 main
+git push origin v1 --force
+```
