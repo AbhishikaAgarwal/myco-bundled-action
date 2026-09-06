@@ -35,7 +35,7 @@ jobs:
       - uses: AbhishikaAgarwal/myco-bundled-action@v1
         with:
           pr_link: ${{ github.event.pull_request.html_url }}
-          llm_provider: ${{ vars.LLM_PROVIDER }}   # "openai" (default) or "anthropic" — set once as a repo/org Variable
+          llm_provider: ${{ vars.LLM_PROVIDER || 'openai' }}   # optional: set once as a repo/org Variable; action falls back to "openai" when unset
           api_key: ${{ secrets.LLM_API_KEY }}
           # litellm_base_url defaults to https://api.openai.com/v1 (only used when llm_provider is "openai") —
           # override if you're using a different OpenAI-compatible provider or a LiteLLM proxy.
@@ -47,7 +47,9 @@ input regardless of provider, so switching providers is a one-line change in **S
 variables → Actions → Variables** — no workflow YAML edit at all, and no way to flip the provider without
 also updating which input the key goes under (that exact mismatch — provider changed, key left under the
 old provider-specific input — is what caused a confusing wrong-endpoint 401 in early testing). Leave
-`LLM_PROVIDER` unset and it defaults to `"openai"`.
+`LLM_PROVIDER` unset and it defaults to `"openai"`. The action resolves this automatically from the
+repo/org variable when the input is omitted, so `llm_provider: ${{ vars.LLM_PROVIDER || 'openai' }}` is the
+safe explicit form and `LLM_PROVIDER` alone without a `with:` value will still resolve to the same thing.
 
 (A raw Gemini key doesn't need `llm_provider: anthropic` — Gemini has its own OpenAI-compatible endpoint, so
 it already works through the default `openai` path via `litellm_base_url`.)
