@@ -153,3 +153,15 @@ keep running the old bundle):
 git tag -f v1 main
 git push origin v1 --force
 ```
+
+Or just run `./publish.sh` (bash) / `.\publish.ps1` (PowerShell) after the
+`git commit` above — either one pushes main and moves+force-pushes `v1` in
+one step, so the tag-move can't be forgotten.
+
+**Windows note**: if `.\publish.ps1` fails with *"running scripts is
+disabled on this system"*, your machine's PowerShell execution policy is
+blocking unsigned local scripts (a common default, unrelated to this repo).
+Either run it once with `powershell -ExecutionPolicy Bypass -File
+.\publish.ps1`, or just run `publish.cmd` instead — a small wrapper that
+does the same thing without touching your machine's execution policy at
+all.
