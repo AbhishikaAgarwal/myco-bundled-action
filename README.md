@@ -59,6 +59,33 @@ for reviewing PRs in the same repo the workflow runs in (posting comments, and �
 `ticket_provider: github-issues` — filing issues there too). No GitHub App or extra token is
 needed for the common case.
 
+## Intent checking
+
+Before reviewing the diff, the agent reads the PR description as the author's
+stated intent, and — if the description contains links — fetches them
+(up to 3, best-effort, 8s timeout each) and includes what it can read as
+additional intent context. It then checks whether the implementation
+actually matches what was described, and flags any mismatch as its own
+finding (titled `Intent mismatch: ...`), posted as an inline PR comment the
+same as any other finding — no separate setup needed.
+
+**Real limitation, not glossed over**: most linked docs teams actually use —
+Notion, Linear, Jira Cloud, Confluence — are either behind auth (an
+unauthenticated fetch hits a login wall) or client-rendered (the raw HTML
+has no real content until JavaScript runs, which this doesn't do). This
+reliably gets usable content from plain text/markdown files, public raw
+GitHub content, and simple server-rendered pages — not from a private
+Notion doc link. When a link can't be read, the agent is told exactly that
+("referenced but unread") rather than silently treating it as empty or
+guessing its content. If your team's specs live in one of those tools, the
+PR description text itself is what actually reaches the model — a
+description that restates the key intent in plain text will get checked
+properly even if the linked doc itself can't be fetched.
+
+If your org's CI shouldn't make outbound calls to arbitrary URLs found in
+PR text, set `follow_intent_links: false` — the PR description itself is
+still used for intent checking either way.
+
 ## Inputs
 
 See [`action.yml`](./action.yml) for the full, current list with defaults — this is a summary.
@@ -75,6 +102,7 @@ See [`action.yml`](./action.yml) for the full, current list with defaults — th
 | `validator_model` | no | same as the main model | Optional cheaper/faster model for the validator pass |
 | `github_token` | no | `${{ github.token }}` | Only override for cross-repo scenarios |
 | `min_severity` | no | `P3` | Lowest severity reported |
+| `follow_intent_links` | no | `true` | Fetch links in the PR description (best-effort) and check the implementation against the stated intent — see "Intent checking" below |
 | `post_github_comments` | no | `true` | |
 | `validate_findings` | no | `true` | Second-pass CONFIRMED/FALSE_POSITIVE/UNCERTAIN check |
 | `ci_gate` | no | `true` | Fail the job on a merge-blocking confirmed finding |

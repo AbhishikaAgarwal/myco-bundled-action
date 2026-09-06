@@ -61,6 +61,10 @@ inputs:
     description: 'Minimum severity to report (P1/P2/P3).'
     required: false
     default: 'P3'
+  follow_intent_links:
+    description: 'Whether to fetch links found in the PR description (best-effort — auth-gated or JS-rendered pages like Notion/Linear/Jira/Confluence usually will not yield usable content) and use the PR description plus any fetched content as "stated intent" to check the implementation against. Set to "false" to disable outbound fetches to URLs found in PR text entirely (e.g. if your org restricts CI egress).'
+    required: false
+    default: 'true'
   post_github_comments:
     description: 'Whether to post findings as PR review comments.'
     required: false
@@ -167,6 +171,7 @@ runs:
         TARGET_REPO_PATH: ${{ inputs.target_repo_path }}
         OUTPUT_DIR: ${{ inputs.output_dir }}
         MIN_SEVERITY: ${{ inputs.min_severity }}
+        FOLLOW_INTENT_LINKS: ${{ inputs.follow_intent_links }}
         POST_GITHUB_COMMENTS: ${{ inputs.post_github_comments }}
         VALIDATE_FINDINGS: ${{ inputs.validate_findings }}
         CI_GATE: ${{ inputs.ci_gate }}
