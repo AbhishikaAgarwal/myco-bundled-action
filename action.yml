@@ -104,7 +104,7 @@ inputs:
     description: '"jira", "github-issues", or "dry-run".'
     required: false
   product_label:
-    description: 'Base label used on created tickets (Jira and GitHub Issues) — e.g. "<product_label>-confirmed-bug" on GitHub Issues, and as a Jira label. Defaults to a neutral "ai-code-review" rather than any product-specific name.'
+    description: 'Base label used on created tickets (Jira and GitHub Issues) — e.g. "<product_label>-confirmed-bug" on GitHub Issues, and as a Jira label. Defaults to "myco". Override per-client if they want their own label scheme instead.'
     required: false
   github_issue_labels:
     description: 'Comma-separated extra labels to add to created GitHub Issues.'

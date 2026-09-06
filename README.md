@@ -81,7 +81,7 @@ See [`action.yml`](./action.yml) for the full, current list with defaults — th
 | `gate_min_severity` | no | `P1` | Severity threshold for the gate |
 | `ticket_provider` | no | — | `jira`, `github-issues`, or `dry-run` |
 | `create_tickets_for` | no | `merge-blocking` | or `all-confirmed` |
-| `product_label` | no | `ai-code-review` | Base label on created tickets — deliberately neutral, not a product-specific name |
+| `product_label` | no | `myco` | Base label on created tickets — override per-client if they want their own label scheme |
 | `metrics_endpoint` / `metrics_api_key` / `client_id` | no | — | Opt-in cross-client metrics reporting (counts + finding titles only — never file paths, root cause, fix text, or code) |
 
 Jira-specific inputs (`jira_base_url`, `jira_email`, `jira_token`, `jira_project`,
@@ -94,8 +94,15 @@ provider.
 From the `Zenith` repo:
 
 ```bash
-npx @vercel/ncc build src/index.ts -o dist
+npx @vercel/ncc build src/index.ts -o dist -m
 ```
+
+The `-m` flag minifies the bundle — mangled variable/function names, no
+whitespace or comments. It's not real code protection (string literals,
+including the LLM prompts, are unaffected by minification and remain
+plainly readable if someone opens the file), but it raises the bar past
+"trivially readable" for casual inspection. Don't drop the flag on a future
+rebuild without a reason.
 
 Copy the resulting `dist/index.js` here, update `action.yml` if any input/env mapping
 changed, commit, and tag a new version (e.g. `v1`, moved forward, or `v1.1`) so pinned
