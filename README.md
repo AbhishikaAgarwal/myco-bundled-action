@@ -54,6 +54,8 @@ Bringing a raw Anthropic key instead of an OpenAI-compatible one? Set `llm_provi
 
 (A raw Gemini key doesn't need this — Gemini has its own OpenAI-compatible endpoint, so it already works through the default `llm_provider: openai` path via `litellm_base_url`.)
 
+**Mismatched key and provider fails fast with a clear message.** An Anthropic key (`sk-ant-...`) passed as `litellm_api_key` with `llm_provider` left at its default (`openai`) — or an OpenAI-style key passed as `anthropic_api_key` — is rejected before any network call, naming the exact input to fix, instead of surfacing as a generic 401 from the wrong provider's API.
+
 `github_token` defaults to the workflow's automatic `secrets.GITHUB_TOKEN`, which is enough
 for reviewing PRs in the same repo the workflow runs in (posting comments, and — if
 `ticket_provider: github-issues` — filing issues there too). No GitHub App or extra token is
