@@ -61,10 +61,13 @@ it already works through the default `openai` path via `litellm_base_url`.)
 network call, naming the exact fix, instead of surfacing as a generic 401 from the wrong provider's API.
 
 **"This API key is not scoped to a workspace" error?** Some Anthropic keys aren't tied to a single
-workspace, and every request 400s with that exact message until one is specified. Either regenerate the
-key with a specific workspace selected in the Anthropic Console (simplest fix, no config needed), or add
+workspace, and every request 400s with that exact message until one is specified -- this is enforced by
+Anthropic's API itself, not something we can route around. Either regenerate the key with a specific
+workspace selected in the Anthropic Console (simplest fix, no config needed), or add
 `anthropic_workspace_id: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}` (only used when `llm_provider: anthropic`)
-to send it as the header the API is asking for.
+to send it as the header the API is asking for. If you hit this without setting `anthropic_workspace_id`,
+the error is caught and rewritten into this same actionable message rather than surfacing as a raw
+Anthropic SDK stack trace.
 
 **Legacy inputs, still supported**: `litellm_api_key` and `anthropic_api_key` still work exactly as
 before and take precedence over `api_key` if you set them explicitly — nothing breaks if you're already
