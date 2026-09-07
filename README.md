@@ -47,9 +47,11 @@ input regardless of provider, so switching providers is a one-line change in **S
 variables → Actions → Variables** — no workflow YAML edit at all, and no way to flip the provider without
 also updating which input the key goes under (that exact mismatch — provider changed, key left under the
 old provider-specific input — is what caused a confusing wrong-endpoint 401 in early testing). Leave
-`LLM_PROVIDER` unset and it defaults to `"openai"`. The action resolves this automatically from the
-repo/org variable when the input is omitted, so `llm_provider: ${{ vars.LLM_PROVIDER || 'openai' }}` is the
-safe explicit form and `LLM_PROVIDER` alone without a `with:` value will still resolve to the same thing.
+`llm_provider` unset in your `with:` block defaults to `"openai"` -- but that default lives in this
+action's own definition, which has no way to read *your* repo's Variables on its own. `vars.LLM_PROVIDER`
+only resolves because your workflow evaluates it and passes the result in as the `llm_provider` input --
+so the line has to be in your `with:` block (as shown above) for a repo/org Variable to have any effect.
+Omitting `llm_provider` entirely, or passing an empty value, both just fall through to `"openai"`.
 
 (A raw Gemini key doesn't need `llm_provider: anthropic` — Gemini has its own OpenAI-compatible endpoint, so
 it already works through the default `openai` path via `litellm_base_url`.)
@@ -57,6 +59,12 @@ it already works through the default `openai` path via `litellm_base_url`.)
 **Mismatched key and provider fails fast with a clear message.** An Anthropic key (`sk-ant-...`) under
 `llm_provider: openai` (or an OpenAI-style key under `llm_provider: anthropic`) is rejected before any
 network call, naming the exact fix, instead of surfacing as a generic 401 from the wrong provider's API.
+
+**"This API key is not scoped to a workspace" error?** Some Anthropic keys aren't tied to a single
+workspace, and every request 400s with that exact message until one is specified. Either regenerate the
+key with a specific workspace selected in the Anthropic Console (simplest fix, no config needed), or add
+`anthropic_workspace_id: ${{ secrets.ANTHROPIC_WORKSPACE_ID }}` (only used when `llm_provider: anthropic`)
+to send it as the header the API is asking for.
 
 **Legacy inputs, still supported**: `litellm_api_key` and `anthropic_api_key` still work exactly as
 before and take precedence over `api_key` if you set them explicitly — nothing breaks if you're already
@@ -108,6 +116,7 @@ See [`action.yml`](./action.yml) for the full, current list with defaults — th
 | `litellm_model` | no | `gpt-4.1` | |
 | `anthropic_api_key` | legacy, if `llm_provider: anthropic` and `api_key` unset | — | Native Anthropic API key (prefer `api_key`) |
 | `anthropic_model` | no | — | Only used with `llm_provider: anthropic` |
+| `anthropic_workspace_id` | no | — | Only needed if your Anthropic key is not scoped to a workspace (see error note above). Only used with `llm_provider: anthropic` |
 | `validator_model` | no | same as the main model | Optional cheaper/faster model for the validator pass |
 | `github_token` | no | `${{ github.token }}` | Only override for cross-repo scenarios |
 | `min_severity` | no | `P3` | Lowest severity reported |

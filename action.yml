@@ -35,6 +35,9 @@ inputs:
   anthropic_base_url:
     description: 'Optional override for an enterprise/custom endpoint (e.g. a Bedrock or Vertex proxy speaking the Anthropic API shape). Only used when llm_provider is "anthropic".'
     required: false
+  anthropic_workspace_id:
+    description: 'Only needed if your Anthropic key is not scoped to a single workspace -- the API then requires this header on every request (error message names it explicitly: "This API key is not scoped to a workspace..."). Find your workspace ID in the Anthropic Console, or regenerate the key with a specific workspace selected to avoid needing this at all. Only used when llm_provider is "anthropic".'
+    required: false
   validator_model:
     description: 'Optional separate (usually cheaper/faster) model for the second-pass finding validator, for whichever provider is configured. Defaults to the main model.'
     required: false
@@ -168,6 +171,7 @@ runs:
         ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
         ANTHROPIC_MODEL: ${{ inputs.anthropic_model }}
         ANTHROPIC_BASE_URL: ${{ inputs.anthropic_base_url }}
+        ANTHROPIC_WORKSPACE_ID: ${{ inputs.anthropic_workspace_id }}
         VALIDATOR_MODEL: ${{ inputs.validator_model }}
         GITHUB_TOKEN: ${{ inputs.github_token }}
         TARGET_REPO: ${{ inputs.target_repo }}
